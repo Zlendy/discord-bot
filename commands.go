@@ -8,31 +8,67 @@ type CommandHandler struct {
 }
 
 var commands = map[string]*CommandHandler{
-	"hello-world": {
+	"say": {
 		Command: discordgo.ApplicationCommand{
-			Name:        "hello-world",
-			Description: "Hello, world!",
-		},
-		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: "Hello, world!",
+			Name: "say",
+			NameLocalizations: &map[discordgo.Locale]string{
+				discordgo.SpanishES: "decir",
+			},
+			Description: "Make the bot say something",
+			DescriptionLocalizations: &map[discordgo.Locale]string{
+				discordgo.SpanishES: "Hacer que el bot diga algo",
+			},
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type: discordgo.ApplicationCommandOptionString,
+					Name: "message",
+					NameLocalizations: map[discordgo.Locale]string{
+						discordgo.SpanishES: "mensaje",
+					},
+					Description: "Message",
+					DescriptionLocalizations: map[discordgo.Locale]string{
+						discordgo.SpanishES: "Mensaje",
+					},
+					Required: true,
 				},
-			})
-		},
-	},
-
-	"goodbye": {
-		Command: discordgo.ApplicationCommand{
-			Name:        "goodbye",
-			Description: "Sayonara",
+			},
 		},
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			message := i.ApplicationCommandData().GetOption("message")
+
+			_, err := s.ChannelMessageSend(i.ChannelID, message.StringValue())
+			if err != nil {
+				var response string
+				switch i.Locale {
+				case discordgo.SpanishES:
+					response = "Ha habido un error al enviar el mensaje"
+				default:
+					response = "There was an error while sending the message"
+				}
+
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Flags:   discordgo.MessageFlagsEphemeral,
+						Content: response,
+					},
+				})
+				return
+			}
+
+			var response string
+			switch i.Locale {
+			case discordgo.SpanishES:
+				response = "Mensaje enviado"
+			default:
+				response = "Message sent"
+			}
+
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: "Sayonara",
+					Flags:   discordgo.MessageFlagsEphemeral,
+					Content: response,
 				},
 			})
 		},
