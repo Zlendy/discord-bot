@@ -38,21 +38,7 @@ var commands = map[string]*CommandHandler{
 
 			_, err := s.ChannelMessageSend(i.ChannelID, message.StringValue())
 			if err != nil {
-				var response string
-				switch i.Locale {
-				case discordgo.SpanishES:
-					response = "Ha habido un error al enviar el mensaje"
-				default:
-					response = "There was an error while sending the message"
-				}
-
-				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Flags:   discordgo.MessageFlagsEphemeral,
-						Content: response,
-					},
-				})
+				messageError(s, i)
 				return
 			}
 
@@ -73,4 +59,22 @@ var commands = map[string]*CommandHandler{
 			})
 		},
 	},
+}
+
+func messageError(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	var response string
+	switch i.Locale {
+	case discordgo.SpanishES:
+		response = "Ha habido un error"
+	default:
+		response = "There was an error"
+	}
+
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Flags:   discordgo.MessageFlagsEphemeral,
+			Content: response,
+		},
+	})
 }
