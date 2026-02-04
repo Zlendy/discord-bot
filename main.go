@@ -23,6 +23,7 @@ func init() {
 
 	var err error
 	bot, err = discordgo.New("Bot " + *Token)
+	bot.Identify.Intents = discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsGuildMembers | discordgo.IntentsGuildPresences
 	if err != nil {
 		log.Fatalf("Invalid bot parameters: %v", err)
 	}

@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -221,6 +223,106 @@ var commands = map[string]*CommandHandler{
 				Data: &discordgo.InteractionResponseData{
 					Flags:   discordgo.MessageFlagsEphemeral,
 					Content: response,
+				},
+			})
+
+			if err != nil {
+				messageError(s, i)
+				return
+			}
+		},
+	},
+
+	"activity": {
+		Command: discordgo.ApplicationCommand{
+			Name: "activity",
+			NameLocalizations: &map[discordgo.Locale]string{
+				discordgo.SpanishES: "actividad",
+			},
+			Description: "Check which users contain a text in their activity",
+			DescriptionLocalizations: &map[discordgo.Locale]string{
+				discordgo.SpanishES: "Comprobar que usuarios contienen un texto en su actividad",
+			},
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type: discordgo.ApplicationCommandOptionString,
+					Name: "text",
+					NameLocalizations: map[discordgo.Locale]string{
+						discordgo.SpanishES: "texto",
+					},
+					Description: "Text",
+					DescriptionLocalizations: map[discordgo.Locale]string{
+						discordgo.SpanishES: "Texto",
+					},
+					Required: true,
+				},
+			},
+		},
+		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			text := i.ApplicationCommandData().GetOption("text").StringValue()
+
+			err := s.RequestGuildMembers(i.GuildID, "", 0, "", true)
+			if err != nil {
+				messageError(s, i)
+				return
+			}
+
+			guild, err := s.State.Guild(i.GuildID)
+			if err != nil {
+				messageError(s, i)
+				return
+			}
+
+			text_regexp := regexp.MustCompile(fmt.Sprintf("(?i)%s", regexp.QuoteMeta(text)))
+			message_users := make([]string, 0)
+
+			for _, presence := range guild.Presences {
+				activities := presence.Activities
+
+				var activity_text string
+				if len(activities) > 0 {
+					activity := activities[len(activities)-1]
+
+					activity_text = activity.State
+					if activity_text == "" {
+						activity_text = activity.Name
+					}
+				}
+
+				if text_regexp.MatchString(activity_text) {
+					// Highlight substring contained in activity text. Example: "Golang goes brr" -> "**Go**lang **go**es brr"
+					activity_text = text_regexp.ReplaceAllStringFunc(activity_text, func(s string) string {
+						return fmt.Sprintf("**%s**", s)
+					})
+
+					// Append a formatted message that mentions the user and shows their activity
+					message_users = append(message_users, fmt.Sprintf("- %s: %s", presence.User.Mention(), activity_text))
+				}
+			}
+
+			var message string
+			if len(message_users) == 0 {
+				switch i.Locale {
+				case discordgo.SpanishES:
+					message = fmt.Sprintf("Ningún usuario contiene el texto `%s` en su actividad\n", text)
+				default:
+					message = fmt.Sprintf("No user contains the text `%s` in their activity\n", text)
+				}
+			} else {
+				switch i.Locale {
+				case discordgo.SpanishES:
+					message = fmt.Sprintf("Estos usuarios contienen el texto `%s` en su actividad:\n", text)
+				default:
+					message = fmt.Sprintf("These users contain the text `%s` in their activity:\n", text)
+				}
+
+				message += strings.Join(message_users, "\n")
+			}
+
+			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: message,
 				},
 			})
 
