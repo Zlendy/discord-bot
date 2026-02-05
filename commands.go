@@ -274,7 +274,7 @@ var commands = map[string]*CommandHandler{
 			}
 
 			text_regexp := regexp.MustCompile(fmt.Sprintf("(?i)%s", regexp.QuoteMeta(text)))
-			message_users := make([]string, 0)
+			var message_users strings.Builder
 
 			for _, presence := range guild.Presences {
 				activities := presence.Activities
@@ -296,33 +296,33 @@ var commands = map[string]*CommandHandler{
 					})
 
 					// Append a formatted message that mentions the user and shows their activity
-					message_users = append(message_users, fmt.Sprintf("- %s: %s", presence.User.Mention(), activity_text))
+					fmt.Fprintf(&message_users, "- %s: %s\n", presence.User.Mention(), activity_text)
 				}
 			}
 
-			var message string
-			if len(message_users) == 0 {
+			var message strings.Builder
+			if message_users.Len() == 0 {
 				switch i.Locale {
 				case discordgo.SpanishES:
-					message = fmt.Sprintf("Ningún usuario contiene el texto `%s` en su actividad\n", text)
+					fmt.Fprintf(&message, "Ningún usuario contiene el texto `%s` en su actividad\n", text)
 				default:
-					message = fmt.Sprintf("No user contains the text `%s` in their activity\n", text)
+					fmt.Fprintf(&message, "No user contains the text `%s` in their activity\n", text)
 				}
 			} else {
 				switch i.Locale {
 				case discordgo.SpanishES:
-					message = fmt.Sprintf("Estos usuarios contienen el texto `%s` en su actividad:\n", text)
+					fmt.Fprintf(&message, "Estos usuarios contienen el texto `%s` en su actividad:\n", text)
 				default:
-					message = fmt.Sprintf("These users contain the text `%s` in their activity:\n", text)
+					fmt.Fprintf(&message, "These users contain the text `%s` in their activity:\n", text)
 				}
 
-				message += strings.Join(message_users, "\n")
+				message.WriteString(message_users.String())
 			}
 
 			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: message,
+					Content: message.String(),
 				},
 			})
 
