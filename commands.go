@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -323,6 +325,58 @@ var commands = map[string]*CommandHandler{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: message.String(),
+				},
+			})
+
+			if err != nil {
+				messageError(s, i)
+				return
+			}
+		},
+	},
+
+	"russianroulette": {
+		Command: discordgo.ApplicationCommand{
+			Name: "russianroulette",
+			NameLocalizations: &map[discordgo.Locale]string{
+				discordgo.SpanishES: "ruletarusa",
+			},
+			Description: "If you lose, you get a temporal timeout",
+			DescriptionLocalizations: &map[discordgo.Locale]string{
+				discordgo.SpanishES: "Si pierdes, te llevas un aislamiento temporal",
+			},
+		},
+		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			var response string
+			var err error
+
+			if rand.IntN(6) == 0 { // 1/6 possibilities to lose
+				until := time.Now().Local().Add(time.Second * time.Duration(15))
+				err = s.GuildMemberTimeout(i.GuildID, i.Member.User.ID, &until)
+				if err != nil {
+					messageError(s, i)
+					return
+				}
+
+				switch i.Locale {
+				case discordgo.SpanishES:
+					response = "Has perdido"
+				default:
+					response = "You lost"
+				}
+			} else {
+				switch i.Locale {
+				case discordgo.SpanishES:
+					response = "No has perdido"
+				default:
+					response = "You didn't lose"
+				}
+			}
+
+			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: response,
 				},
 			})
 
