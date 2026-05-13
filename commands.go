@@ -47,7 +47,7 @@ var commands = map[string]*CommandHandler{
 
 			_, err := s.ChannelMessageSend(i.ChannelID, message.StringValue())
 			if err != nil {
-				messageError(s, i)
+				messageError(s, i, err)
 				return
 			}
 
@@ -114,13 +114,13 @@ var commands = map[string]*CommandHandler{
 
 			member, err := s.GuildMember(i.GuildID, userId)
 			if err != nil {
-				messageError(s, i)
+				messageError(s, i, err)
 				return
 			}
 
 			err = s.GuildMemberNickname(i.GuildID, userId, name.StringValue())
 			if err != nil {
-				messageError(s, i)
+				messageError(s, i, err)
 				return
 			}
 
@@ -155,13 +155,13 @@ var commands = map[string]*CommandHandler{
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			voice, err := findUserVoiceState(s, i.Member.User.ID)
 			if err != nil {
-				messageError(s, i)
+				messageError(s, i, err)
 				return
 			}
 
 			_, err = s.ChannelVoiceJoin(i.GuildID, voice.ChannelID, false, false)
 			if err != nil {
-				messageError(s, i)
+				messageError(s, i, err)
 				return
 			}
 
@@ -182,7 +182,7 @@ var commands = map[string]*CommandHandler{
 			})
 
 			if err != nil {
-				messageError(s, i)
+				messageError(s, i, err)
 				return
 			}
 		},
@@ -202,13 +202,13 @@ var commands = map[string]*CommandHandler{
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			voice, ok := s.VoiceConnections[i.GuildID]
 			if !ok {
-				messageError(s, i)
+				messageError(s, i, errors.New("Key not in map"))
 				return
 			}
 
 			err := voice.Disconnect()
 			if err != nil {
-				messageError(s, i)
+				messageError(s, i, err)
 				return
 			}
 
@@ -229,7 +229,7 @@ var commands = map[string]*CommandHandler{
 			})
 
 			if err != nil {
-				messageError(s, i)
+				messageError(s, i, err)
 				return
 			}
 		},
@@ -265,13 +265,13 @@ var commands = map[string]*CommandHandler{
 
 			err := s.RequestGuildMembers(i.GuildID, "", 0, "", true)
 			if err != nil {
-				messageError(s, i)
+				messageError(s, i, err)
 				return
 			}
 
 			guild, err := s.State.Guild(i.GuildID)
 			if err != nil {
-				messageError(s, i)
+				messageError(s, i, err)
 				return
 			}
 
@@ -329,7 +329,7 @@ var commands = map[string]*CommandHandler{
 			})
 
 			if err != nil {
-				messageError(s, i)
+				messageError(s, i, err)
 				return
 			}
 		},
@@ -354,7 +354,7 @@ var commands = map[string]*CommandHandler{
 				until := time.Now().Local().Add(time.Second * time.Duration(15))
 				err = s.GuildMemberTimeout(i.GuildID, i.Member.User.ID, &until)
 				if err != nil {
-					messageError(s, i)
+					messageError(s, i, err)
 					return
 				}
 
@@ -381,27 +381,27 @@ var commands = map[string]*CommandHandler{
 			})
 
 			if err != nil {
-				messageError(s, i)
+				messageError(s, i, err)
 				return
 			}
 		},
 	},
 }
 
-func messageError(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func messageError(s *discordgo.Session, i *discordgo.InteractionCreate, err error) {
 	var response string
 	switch i.Locale {
 	case discordgo.SpanishES:
-		response = "Ha habido un error"
+		response = "Ha habido un error: %s"
 	default:
-		response = "There was an error"
+		response = "There was an error: %s"
 	}
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Flags:   discordgo.MessageFlagsEphemeral,
-			Content: response,
+			Content: fmt.Sprintf(response, err),
 		},
 	})
 }
