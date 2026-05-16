@@ -1,0 +1,6 @@
+services:
+  discord_bot:
+    container_name: discord_bot
+    build:
+      dockerfile: Dockerfile
+    entrypoint: /discord-bot -guild "${GUILD}" -token "${TOKEN}"
