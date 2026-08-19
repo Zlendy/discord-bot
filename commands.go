@@ -351,7 +351,7 @@ var commands = map[string]*CommandHandler{
 			var err error
 
 			if rand.IntN(6) == 0 { // 1/6 possibilities to lose
-				until := time.Now().Local().Add(time.Second * time.Duration(15))
+				until := time.Now().Local().Add(time.Minute * time.Duration(5))
 				err = s.GuildMemberTimeout(i.GuildID, i.Member.User.ID, &until)
 				if err != nil {
 					messageError(s, i, err)
