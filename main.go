@@ -44,6 +44,8 @@ func init() {
 			command.Handler(s, i)
 		}
 	})
+
+	bot.AddHandler(MessageHandler)
 }
 
 func main() {

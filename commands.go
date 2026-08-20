@@ -1,13 +1,9 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"math/rand/v2"
-	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -39,7 +35,7 @@ var commands = map[string]*CommandHandler{
 
 			_, err := s.ChannelMessageSend(i.ChannelID, message.StringValue())
 			if err != nil {
-				messageError(s, i, err)
+				interactionError(s, i, err)
 				return
 			}
 
@@ -80,13 +76,13 @@ var commands = map[string]*CommandHandler{
 
 			member, err := s.GuildMember(i.GuildID, userId)
 			if err != nil {
-				messageError(s, i, err)
+				interactionError(s, i, err)
 				return
 			}
 
 			err = s.GuildMemberNickname(i.GuildID, userId, name.StringValue())
 			if err != nil {
-				messageError(s, i, err)
+				interactionError(s, i, err)
 				return
 			}
 
@@ -107,13 +103,13 @@ var commands = map[string]*CommandHandler{
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			voice, err := findUserVoiceState(s, i.Member.User.ID)
 			if err != nil {
-				messageError(s, i, err)
+				interactionError(s, i, err)
 				return
 			}
 
 			_, err = s.ChannelVoiceJoin(i.GuildID, voice.ChannelID, false, false)
 			if err != nil {
-				messageError(s, i, err)
+				interactionError(s, i, err)
 				return
 			}
 
@@ -126,7 +122,7 @@ var commands = map[string]*CommandHandler{
 			})
 
 			if err != nil {
-				messageError(s, i, err)
+				interactionError(s, i, err)
 				return
 			}
 		},
@@ -140,13 +136,13 @@ var commands = map[string]*CommandHandler{
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			voice, ok := s.VoiceConnections[i.GuildID]
 			if !ok {
-				messageError(s, i, errors.New("Key not in map"))
+				interactionError(s, i, errors.New("Key not in map"))
 				return
 			}
 
 			err := voice.Disconnect()
 			if err != nil {
-				messageError(s, i, err)
+				interactionError(s, i, err)
 				return
 			}
 
@@ -159,7 +155,7 @@ var commands = map[string]*CommandHandler{
 			})
 
 			if err != nil {
-				messageError(s, i, err)
+				interactionError(s, i, err)
 				return
 			}
 		},
@@ -183,13 +179,13 @@ var commands = map[string]*CommandHandler{
 
 			err := s.RequestGuildMembers(i.GuildID, "", 0, "", true)
 			if err != nil {
-				messageError(s, i, err)
+				interactionError(s, i, err)
 				return
 			}
 
 			guild, err := s.State.Guild(i.GuildID)
 			if err != nil {
-				messageError(s, i, err)
+				interactionError(s, i, err)
 				return
 			}
 
@@ -235,7 +231,7 @@ var commands = map[string]*CommandHandler{
 			})
 
 			if err != nil {
-				messageError(s, i, err)
+				interactionError(s, i, err)
 				return
 			}
 		},
@@ -254,7 +250,7 @@ var commands = map[string]*CommandHandler{
 				until := time.Now().Local().Add(time.Minute * time.Duration(5))
 				err = s.GuildMemberTimeout(i.GuildID, i.Member.User.ID, &until)
 				if err != nil {
-					messageError(s, i, err)
+					interactionError(s, i, err)
 					return
 				}
 
@@ -271,89 +267,14 @@ var commands = map[string]*CommandHandler{
 			})
 
 			if err != nil {
-				messageError(s, i, err)
-				return
-			}
-		},
-	},
-
-	"chat": {
-		Command: discordgo.ApplicationCommand{
-			Name:        "chat",
-			Description: "Habla con Ralsei",
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "message",
-					Description: "Mensaje",
-					Required:    true,
-				},
-			},
-		},
-		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			message := i.ApplicationCommandData().GetOption("message").StringValue()
-
-			s.ChannelTyping(i.ChannelID)
-
-			body := &Ollama{
-				Model:  *OllamaModel,
-				System: *OllamaSystemPrompt,
-				Prompt: message,
-				Stream: false,
-				Think:  false,
-			}
-
-			marshalled, err := json.Marshal(body)
-			if err != nil {
-				messageError(s, i, err)
-				return
-			}
-
-			req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/generate", *OllamaHost), bytes.NewReader(marshalled))
-			if err != nil {
-				messageError(s, i, err)
-				return
-			}
-
-			client := &http.Client{Timeout: 30 * time.Second}
-
-			res, err := client.Do(req)
-			if err != nil {
-				messageError(s, i, err)
-				return
-			}
-
-			defer res.Body.Close()
-
-			response_bytes, err := io.ReadAll(res.Body)
-			if err != nil {
-				messageError(s, i, err)
-				return
-			}
-
-			var response_obj OllamaGenerateResponse
-			err = json.Unmarshal(response_bytes, &response_obj)
-			if err != nil {
-				messageError(s, i, err)
-				return
-			}
-
-			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: response_obj.Response,
-				},
-			})
-
-			if err != nil {
-				messageError(s, i, err)
+				interactionError(s, i, err)
 				return
 			}
 		},
 	},
 }
 
-func messageError(s *discordgo.Session, i *discordgo.InteractionCreate, err error) {
+func interactionError(s *discordgo.Session, i *discordgo.InteractionCreate, err error) {
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{

@@ -1,2 +1,4 @@
 .env
 /discord-bot
+.zed/debug.json
+__debug_bin*
