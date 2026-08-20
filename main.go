@@ -11,9 +11,12 @@ import (
 
 // Bot parameters
 var (
-	GuildID        = flag.String("guild", "", "Test guild ID. If not passed - bot registers commands globally")
-	Token          = flag.String("token", "", "Bot access token")
-	RemoveCommands = flag.Bool("rmcmd", true, "Remove all commands after shutdowning or not")
+	GuildID            = flag.String("guild", "", "Test guild ID. If not passed - bot registers commands globally")
+	Token              = flag.String("token", "", "Bot access token")
+	RemoveCommands     = flag.Bool("rmcmd", true, "Remove all commands after shutdowning or not")
+	OllamaHost         = flag.String("ollama_host", "", "Ollama Host")
+	OllamaModel        = flag.String("ollama_model", "", "Ollama Model")
+	OllamaSystemPrompt = flag.String("ollama_system_prompt", "", "Ollama System Prompt")
 )
 
 var bot *discordgo.Session

@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math/rand/v2"
+	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -263,6 +267,81 @@ var commands = map[string]*CommandHandler{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: response,
+				},
+			})
+
+			if err != nil {
+				messageError(s, i, err)
+				return
+			}
+		},
+	},
+
+	"chat": {
+		Command: discordgo.ApplicationCommand{
+			Name:        "chat",
+			Description: "Habla con Ralsei",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "message",
+					Description: "Mensaje",
+					Required:    true,
+				},
+			},
+		},
+		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			message := i.ApplicationCommandData().GetOption("message").StringValue()
+
+			s.ChannelTyping(i.ChannelID)
+
+			body := &Ollama{
+				Model:  *OllamaModel,
+				System: *OllamaSystemPrompt,
+				Prompt: message,
+				Stream: false,
+				Think:  false,
+			}
+
+			marshalled, err := json.Marshal(body)
+			if err != nil {
+				messageError(s, i, err)
+				return
+			}
+
+			req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/generate", *OllamaHost), bytes.NewReader(marshalled))
+			if err != nil {
+				messageError(s, i, err)
+				return
+			}
+
+			client := &http.Client{Timeout: 30 * time.Second}
+
+			res, err := client.Do(req)
+			if err != nil {
+				messageError(s, i, err)
+				return
+			}
+
+			defer res.Body.Close()
+
+			response_bytes, err := io.ReadAll(res.Body)
+			if err != nil {
+				messageError(s, i, err)
+				return
+			}
+
+			var response_obj OllamaGenerateResponse
+			err = json.Unmarshal(response_bytes, &response_obj)
+			if err != nil {
+				messageError(s, i, err)
+				return
+			}
+
+			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: response_obj.Response,
 				},
 			})
 
