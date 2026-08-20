@@ -3,5 +3,5 @@ services:
     container_name: discord_bot
     build:
       dockerfile: Dockerfile
-    entrypoint: /discord-bot -guild "${GUILD}" -token "${TOKEN}"
+    entrypoint: /discord-bot -guild "${GUILD}" -token "${TOKEN}" -ollama_host "${OLLAMA_HOST}" -ollama_model "${OLLAMA_MODEL}" -ollama_system_prompt "${OLLAMA_SYSTEM_PROMPT}"
     restart: unless-stopped
