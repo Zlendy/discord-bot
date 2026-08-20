@@ -19,26 +19,14 @@ type CommandHandler struct {
 var commands = map[string]*CommandHandler{
 	"say": {
 		Command: discordgo.ApplicationCommand{
-			Name: "say",
-			NameLocalizations: &map[discordgo.Locale]string{
-				discordgo.SpanishES: "decir",
-			},
-			Description: "Make the bot say something",
-			DescriptionLocalizations: &map[discordgo.Locale]string{
-				discordgo.SpanishES: "Hacer que el bot diga algo",
-			},
+			Name:        "say",
+			Description: "Hacer que el bot diga algo",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
-					Type: discordgo.ApplicationCommandOptionString,
-					Name: "message",
-					NameLocalizations: map[discordgo.Locale]string{
-						discordgo.SpanishES: "mensaje",
-					},
-					Description: "Message",
-					DescriptionLocalizations: map[discordgo.Locale]string{
-						discordgo.SpanishES: "Mensaje",
-					},
-					Required: true,
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "message",
+					Description: "Mensaje",
+					Required:    true,
 				},
 			},
 		},
@@ -51,19 +39,11 @@ var commands = map[string]*CommandHandler{
 				return
 			}
 
-			var response string
-			switch i.Locale {
-			case discordgo.SpanishES:
-				response = "Mensaje enviado"
-			default:
-				response = "Message sent"
-			}
-
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Flags:   discordgo.MessageFlagsEphemeral,
-					Content: response,
+					Content: "Mensaje enviado",
 				},
 			})
 		},
@@ -71,38 +51,20 @@ var commands = map[string]*CommandHandler{
 
 	"rename": {
 		Command: discordgo.ApplicationCommand{
-			Name: "rename",
-			NameLocalizations: &map[discordgo.Locale]string{
-				discordgo.SpanishES: "renombrar",
-			},
-			Description: "Change another user's name",
-			DescriptionLocalizations: &map[discordgo.Locale]string{
-				discordgo.SpanishES: "Cambiar el nombre de otro usuario",
-			},
+			Name:        "rename",
+			Description: "Cambiar el nombre de otro usuario",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
-					Type: discordgo.ApplicationCommandOptionUser,
-					Name: "user",
-					NameLocalizations: map[discordgo.Locale]string{
-						discordgo.SpanishES: "usuario",
-					},
-					Description: "User",
-					DescriptionLocalizations: map[discordgo.Locale]string{
-						discordgo.SpanishES: "Usuario",
-					},
-					Required: true,
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "user",
+					Description: "Usuario",
+					Required:    true,
 				},
 				{
-					Type: discordgo.ApplicationCommandOptionString,
-					Name: "name",
-					NameLocalizations: map[discordgo.Locale]string{
-						discordgo.SpanishES: "nombre",
-					},
-					Description: "Name",
-					DescriptionLocalizations: map[discordgo.Locale]string{
-						discordgo.SpanishES: "Nombre",
-					},
-					Required: true,
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "name",
+					Description: "Nombre",
+					Required:    true,
 				},
 			},
 		},
@@ -124,18 +86,10 @@ var commands = map[string]*CommandHandler{
 				return
 			}
 
-			var response string
-			switch i.Locale {
-			case discordgo.SpanishES:
-				response = fmt.Sprintf("El nombre de `%s` ha sido cambiado a `%s`", member.Nick, name.StringValue())
-			default:
-				response = fmt.Sprintf("`%s`'s name has been changed to `%s`", member.Nick, name.StringValue())
-			}
-
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: response,
+					Content: fmt.Sprintf("El nombre de `%s` ha sido cambiado a `%s`", member.Nick, name.StringValue()),
 				},
 			})
 		},
@@ -143,14 +97,8 @@ var commands = map[string]*CommandHandler{
 
 	"join": {
 		Command: discordgo.ApplicationCommand{
-			Name: "join",
-			NameLocalizations: &map[discordgo.Locale]string{
-				discordgo.SpanishES: "unirse",
-			},
-			Description: "Join your current voice channel",
-			DescriptionLocalizations: &map[discordgo.Locale]string{
-				discordgo.SpanishES: "Unirse a tu canal de voz actual",
-			},
+			Name:        "join",
+			Description: "Unirse a tu canal de voz actual",
 		},
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			voice, err := findUserVoiceState(s, i.Member.User.ID)
@@ -165,19 +113,11 @@ var commands = map[string]*CommandHandler{
 				return
 			}
 
-			var response string
-			switch i.Locale {
-			case discordgo.SpanishES:
-				response = "Me he unido a tu canal de voz"
-			default:
-				response = "I joined your voice channel"
-			}
-
 			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Flags:   discordgo.MessageFlagsEphemeral,
-					Content: response,
+					Content: "Me he unido a tu canal de voz",
 				},
 			})
 
@@ -190,14 +130,8 @@ var commands = map[string]*CommandHandler{
 
 	"leave": {
 		Command: discordgo.ApplicationCommand{
-			Name: "leave",
-			NameLocalizations: &map[discordgo.Locale]string{
-				discordgo.SpanishES: "salirse",
-			},
-			Description: "Leave a voice channel",
-			DescriptionLocalizations: &map[discordgo.Locale]string{
-				discordgo.SpanishES: "Salirse de un canal de voz",
-			},
+			Name:        "leave",
+			Description: "Salirse de un canal de voz",
 		},
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			voice, ok := s.VoiceConnections[i.GuildID]
@@ -212,19 +146,11 @@ var commands = map[string]*CommandHandler{
 				return
 			}
 
-			var response string
-			switch i.Locale {
-			case discordgo.SpanishES:
-				response = "Me he salido del canal de voz"
-			default:
-				response = "I left the voice channel"
-			}
-
 			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Flags:   discordgo.MessageFlagsEphemeral,
-					Content: response,
+					Content: "Me he salido del canal de voz",
 				},
 			})
 
@@ -237,26 +163,14 @@ var commands = map[string]*CommandHandler{
 
 	"activity": {
 		Command: discordgo.ApplicationCommand{
-			Name: "activity",
-			NameLocalizations: &map[discordgo.Locale]string{
-				discordgo.SpanishES: "actividad",
-			},
-			Description: "Check which users contain a text in their activity",
-			DescriptionLocalizations: &map[discordgo.Locale]string{
-				discordgo.SpanishES: "Comprobar que usuarios contienen un texto en su actividad",
-			},
+			Name:        "activity",
+			Description: "Comprobar que usuarios contienen un texto en su actividad",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
-					Type: discordgo.ApplicationCommandOptionString,
-					Name: "text",
-					NameLocalizations: map[discordgo.Locale]string{
-						discordgo.SpanishES: "texto",
-					},
-					Description: "Text",
-					DescriptionLocalizations: map[discordgo.Locale]string{
-						discordgo.SpanishES: "Texto",
-					},
-					Required: true,
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "text",
+					Description: "Texto",
+					Required:    true,
 				},
 			},
 		},
@@ -304,21 +218,9 @@ var commands = map[string]*CommandHandler{
 
 			var message strings.Builder
 			if message_users.Len() == 0 {
-				switch i.Locale {
-				case discordgo.SpanishES:
-					fmt.Fprintf(&message, "Ningún usuario contiene el texto `%s` en su actividad\n", text)
-				default:
-					fmt.Fprintf(&message, "No user contains the text `%s` in their activity\n", text)
-				}
+				fmt.Fprintf(&message, "Ningún usuario contiene el texto `%s` en su actividad\n", text)
 			} else {
-				switch i.Locale {
-				case discordgo.SpanishES:
-					fmt.Fprintf(&message, "Estos usuarios contienen el texto `%s` en su actividad:\n", text)
-				default:
-					fmt.Fprintf(&message, "These users contain the text `%s` in their activity:\n", text)
-				}
-
-				message.WriteString(message_users.String())
+				fmt.Fprintf(&message, "Estos usuarios contienen el texto `%s` en su actividad:\n", text)
 			}
 
 			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -337,14 +239,8 @@ var commands = map[string]*CommandHandler{
 
 	"russianroulette": {
 		Command: discordgo.ApplicationCommand{
-			Name: "russianroulette",
-			NameLocalizations: &map[discordgo.Locale]string{
-				discordgo.SpanishES: "ruletarusa",
-			},
-			Description: "If you lose, you get a temporal timeout",
-			DescriptionLocalizations: &map[discordgo.Locale]string{
-				discordgo.SpanishES: "Si pierdes, te llevas un aislamiento temporal",
-			},
+			Name:        "russianroulette",
+			Description: "Si pierdes, te llevas un aislamiento temporal",
 		},
 		Handler: func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			var response string
@@ -358,19 +254,9 @@ var commands = map[string]*CommandHandler{
 					return
 				}
 
-				switch i.Locale {
-				case discordgo.SpanishES:
-					response = "Has perdido"
-				default:
-					response = "You lost"
-				}
+				response = "Has perdido"
 			} else {
-				switch i.Locale {
-				case discordgo.SpanishES:
-					response = "No has perdido"
-				default:
-					response = "You didn't lose"
-				}
+				response = "No has perdido"
 			}
 
 			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -389,19 +275,11 @@ var commands = map[string]*CommandHandler{
 }
 
 func messageError(s *discordgo.Session, i *discordgo.InteractionCreate, err error) {
-	var response string
-	switch i.Locale {
-	case discordgo.SpanishES:
-		response = "Ha habido un error: %s"
-	default:
-		response = "There was an error: %s"
-	}
-
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Flags:   discordgo.MessageFlagsEphemeral,
-			Content: fmt.Sprintf(response, err),
+			Content: fmt.Sprintf("Ha habido un error: %s", err),
 		},
 	})
 }
@@ -414,5 +292,5 @@ func findUserVoiceState(s *discordgo.Session, userId string) (*discordgo.VoiceSt
 			}
 		}
 	}
-	return nil, errors.New("Could not find user's voice state")
+	return nil, errors.New("No se ha podido encontrar el estado de voz del usuario")
 }
