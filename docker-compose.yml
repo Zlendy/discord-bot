@@ -4,3 +4,4 @@ services:
     build:
       dockerfile: Dockerfile
     entrypoint: /discord-bot -guild "${GUILD}" -token "${TOKEN}"
+    restart: unless-stopped
